@@ -11,7 +11,7 @@ public class App {
 
 
     private static OutputStream getSocketConnection() throws IOException {
-        Socket socket = new Socket("192.168.178.42", 7890);
+        Socket socket = new Socket("192.168.178.56", 7890);
         return socket.getOutputStream();
 
     }
@@ -227,7 +227,7 @@ public class App {
 
     public static void sendImage() throws IOException {
 
-        FileInputStream insFile = new FileInputStream("/home/javi/Desktop/head.ppm");
+        InputStream insFile = App.class.getResourceAsStream("head.ppm");
 
         if (insFile.read() != 'P') {
             throw new IOException("Invalid file");
@@ -302,8 +302,9 @@ public class App {
         }
 
 
+        InputStream insBuff = App.class.getResourceAsStream("MatelighPattern.csv");
         String line;
-        BufferedReader br = new BufferedReader(new FileReader("/home/javi/Desktop/MatelighPattern.csv"));
+        BufferedReader br = new BufferedReader(new InputStreamReader(insBuff));
         int countCSV = 0;
         int[] arrayCSV = new int[byteArrayLength];
 
