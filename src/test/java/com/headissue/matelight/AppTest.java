@@ -181,26 +181,24 @@ public class AppTest {
     }
 
     @Test
-    public void testSendHeadissueLogo() {
-
-        sendLogo();
-    }
-
-    @Test
     public void testSendSnakeToMateLight() {
 
         sendSnake();
     }
 
-
-
     @Test
     public void testReadImage() throws IOException {
 
-        readImage();
+        sendImage();
 
     }
 
 
+    @Test
+    public void testReadGif() throws IOException {
+
+        sendGif();
+
+    }
 
 }

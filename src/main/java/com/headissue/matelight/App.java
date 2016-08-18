@@ -3,8 +3,6 @@ package com.headissue.matelight;
 
 import java.net.*;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class App {
@@ -13,7 +11,7 @@ public class App {
 
 
     private static OutputStream getSocketConnection() throws IOException {
-        Socket socket = new Socket("192.168.178.56", 7890);
+        Socket socket = new Socket("192.168.178.42", 7890);
         return socket.getOutputStream();
 
     }
@@ -173,9 +171,7 @@ public class App {
 
     public static void sendSnake() {
 
-
         OutputStream out = null;
-
 
         try {
             out = getSocketConnection();
@@ -192,7 +188,6 @@ public class App {
 
             try {
 
-
                 out.write(constructHeader(blackByteArray));
                 out.write(blackByteArray);
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -205,13 +200,11 @@ public class App {
                     lenghtByteArray++;
                 }
 
-
                 if (lenghtByteArray >= 24) {
 
                     blackByteArray[lenghtByteArray - 24] = blackByteArray[0];
                     blackByteArray[lenghtByteArray - 23] = blackByteArray[0];
                     blackByteArray[lenghtByteArray - 22] = blackByteArray[0];
-
                 }
 
                 if (lenghtByteArray - 24 >= maxLenght) {
@@ -221,111 +214,88 @@ public class App {
                     blackByteArray = greenByteArray;
 
                 }
-
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
-
     }
 
+    public static void sendImage() throws IOException {
 
-    public static void readImage() throws IOException {
-
-
-
-
-        File file = new File("/home/javi/Desktop/head.ppm");
-
-        FileInputStream insFile = new FileInputStream(file);
-
+        FileInputStream insFile = new FileInputStream("/home/javi/Desktop/head.ppm");
 
         if (insFile.read() != 'P') {
             throw new IOException("Invalid file");
         }
-        if (insFile.read()!='6'){
+        if (insFile.read() != '6') {
             throw new IOException("Invalid file");
         }
-        if (insFile.read()!='\n'){
+        if (insFile.read() != '\n') {
             throw new IOException("Must be a new Line");
         }
 
         int fourthByte = insFile.read();
 
-        if(fourthByte=='#'){
-            while (insFile.read()!='#' && insFile.read()!='\n'){
+        if (fourthByte == '#') {
+            while (insFile.read() != '#' && insFile.read() != '\n') {
                 //Skip comments
             }
         }
 
-
         //Height
-
         StringBuilder heightString = new StringBuilder();
-
-        while (true){
-            int var = insFile.read();
-            if (var!=0x20){
-                heightString.append((char)var);
-            }
-            else{
+        int heightVar = 0;
+        while (true) {
+            heightVar = insFile.read();
+            if (heightVar != 0x20) {
+                heightString.append((char) heightVar);
+            } else {
                 break;
             }
         }
 
-
-
         //Length
-
         StringBuilder lengthString = new StringBuilder();
-        while (true){
-            int lenghtVar = insFile.read();
-            if (lenghtVar!=0x0a){
-                lengthString.append((char)lenghtVar);
-            }
-            else{
+        int lenghtVar = 0;
+        while (true) {
+             lenghtVar = insFile.read();
+            if (lenghtVar != 0x0a) {
+                lengthString.append((char) lenghtVar);
+            } else {
                 break;
             }
         }
 
         //Max Value
-
         StringBuilder MaxValueString = new StringBuilder();
-        while (true){
-            int maxVar = insFile.read();
-            if (maxVar!=0x0a){
-                MaxValueString.append((char)maxVar);
-            }
-            else{
+        int maxVar = 0;
+        while (true) {
+            maxVar = insFile.read();
+            if (maxVar != 0x0a) {
+                MaxValueString.append((char) maxVar);
+            } else {
                 break;
             }
         }
 
-
-
-
         //Colours ByteArray
+        int byteArrayLength = Integer.parseInt(String.valueOf(heightString)) * Integer.parseInt(String.valueOf(lengthString));
 
-        int byteArrayLength = Integer.parseInt(String.valueOf(heightString))*Integer.parseInt(String.valueOf(lengthString));
-
-
-        byte [][] colourByteArray = new byte[byteArrayLength][3];
+        byte[][] colourByteArray = new byte[byteArrayLength][3];
 
         int count = 0;
-        while (count<byteArrayLength){
+        while (count < byteArrayLength) {
 
-            byte byteRed = (byte)insFile.read();
-            byte byteGreen = (byte)insFile.read();
-            byte byteBlue = (byte)insFile.read();
+            byte byteRed = (byte) insFile.read();
+            byte byteGreen = (byte) insFile.read();
+            byte byteBlue = (byte) insFile.read();
 
-            colourByteArray [count] = new byte[]{byteRed,byteGreen,byteBlue};
+            colourByteArray[count] = new byte[]{byteRed, byteGreen, byteBlue};
 
             count++;
 
@@ -335,45 +305,37 @@ public class App {
         String line;
         BufferedReader br = new BufferedReader(new FileReader("/home/javi/Desktop/MatelighPattern.csv"));
         int countCSV = 0;
-        int [] arrayCSV = new int[byteArrayLength];
+        int[] arrayCSV = new int[byteArrayLength];
 
         //FIXMEE!
-        while ((line=br.readLine())!=null){
+        while ((line = br.readLine()) != null) {
 
-            StringTokenizer str = new StringTokenizer(line,",");
-            while (str.hasMoreTokens()){
+            StringTokenizer str = new StringTokenizer(line, ",");
+            while (str.hasMoreTokens()) {
                 int ledVar = Integer.parseInt(str.nextToken());
 
-                arrayCSV[ledVar]= countCSV;
+                arrayCSV[ledVar] = countCSV;
 
                 countCSV++;
             }
         }
 
-        byte headerArray[] = new byte[]{0, 0, (byte) (byteArrayLength*3 >> 8), (byte) (byteArrayLength*3)};
+        byte headerArray[] = new byte[]{0, 0, (byte) (byteArrayLength * 3 >> 8), (byte) (byteArrayLength * 3)};
 
-        byte [] colores = new byte [byteArrayLength*3];
-
-
+        byte[] colores = new byte[byteArrayLength * 3];
 
         int countImage = 0;
         for (int i = 0; i < byteArrayLength; i++) {
 
-                int posImage = arrayCSV[i];
+            int posImage = arrayCSV[i];
 
-                colores[countImage] = colourByteArray[posImage][0];
-                colores[countImage+1] = colourByteArray[posImage][1];
-                colores[countImage+2] = colourByteArray[posImage][2];
+            colores[countImage] = colourByteArray[posImage][0];
+            colores[countImage + 1] = colourByteArray[posImage][1];
+            colores[countImage + 2] = colourByteArray[posImage][2];
 
-            countImage= countImage+3;
-
+            countImage = countImage + 3;
 
         }
-
-
-
-
-
 
         try {
             OutputStream out = getSocketConnection();
@@ -385,6 +347,7 @@ public class App {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
 
 
@@ -392,127 +355,32 @@ public class App {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+    public static void   sendGif() {
 
 
 
     }
 
-    public static void sendLogo() {
 
-        byte outPixel1[] = new byte[]{0, 0, 0, (byte) 240,
 
-                // MateLight Box n1
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
 
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
 
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
 
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
 
-                // MateLight Box n2
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
 
-                // MateLight Box n3
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
 
-                // MateLight Box n4
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 255, (byte) 255,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0,
-                (byte) 255, (byte) 128, 0
 
-        };
 
-        try {
-            OutputStream out = getSocketConnection();
-            out.write(outPixel1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-    }
+
+
+
+
+
+
+
+
+
 
 
 }
